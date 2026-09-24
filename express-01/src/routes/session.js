@@ -1,10 +1,8 @@
 import { Router } from "express";
+import sessionController from "../controllers/sessionController.js";
 
 const router = Router();
 
-router.get("/", async (req, res) => {
-  const user = await req.context.models.User.findByPk(req.context.me.id);
-  return res.send(user);
-});
+router.get("/", sessionController.getCurrentUser);
 
 export default router;

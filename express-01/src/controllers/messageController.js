@@ -44,6 +44,32 @@ const create = async (req, res) => {
   }
 };
 
+const updateMessage = async (req, res) => {
+  try {
+    const message = await messageService.findById(req.context.models, req.params.messageId);
+
+    if (!message) {
+      return res.status(404).send({ message: "Mensagem não encontrada" });
+    }
+
+    if (!req.context.me || message.userId !== req.context.me.id) {
+      return res.status(403).send({ message: "Você só pode atualizar suas próprias mensagens" });
+    }
+
+    if (!req.body.text) {
+      return res.status(400).send({ message: "O campo text é obrigatório" });
+    }
+
+    const updatedMessage = await messageService.updateMessage(req.context.models, req.params.messageId, {
+      text: req.body.text,
+    });
+
+    return res.status(200).send(updatedMessage);
+  } catch (error) {
+    return res.status(500).send({ message: "Erro interno do servidor" });
+  }
+};
+
 const remove = async (req, res) => {
   try {
     const message = await messageService.findById(req.context.models, req.params.messageId);
@@ -67,5 +93,6 @@ export const messageController = {
   getAll,
   getById,
   create,
+  updateMessage,
   remove,
 };

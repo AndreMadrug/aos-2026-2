@@ -23,30 +23,61 @@ const getById = async (req, res) => {
   }
 };
 
-const create = (req, res) => {
-  const { username, email } = req.body;
+const create = async (req, res) => {
+  try {
+    const { username, email } = req.body;
 
-  if (!username || !email) {
-    return res.status(400).send({ message: "username e email são obrigatórios" });
+    if (!username || !email) {
+      return res.status(400).send({ message: "username e email são obrigatórios" });
+    }
+
+    const user = await userService.createUser(req.context.models, { username, email });
+
+    return res.status(201).send(user);
+  } catch (error) {
+    return res.status(500).send({ message: "Erro interno do servidor" });
   }
-
-  return res.status(201).send("POST HTTP method on user resource");
 };
 
-const update = (req, res) => {
-  if (!req.context.me || String(req.context.me.id) !== req.params.userId) {
-    return res.status(403).send({ message: "Você só pode atualizar seu próprio usuário" });
-  }
+const update = async (req, res) => {
+  try {
+    if (!req.context.me || String(req.context.me.id) !== req.params.userId) {
+      return res.status(403).send({ message: "Você só pode atualizar seu próprio usuário" });
+    }
 
-  return res.status(200).send(`PUT HTTP method on user/${req.params.userId} resource`);
+    const { username, email } = req.body;
+
+    const user = await userService.updateUser(req.context.models, req.params.userId, {
+      username,
+      email,
+    });
+
+    if (!user) {
+      return res.status(404).send({ message: "Usuário não encontrado" });
+    }
+
+    return res.status(200).send(user);
+  } catch (error) {
+    return res.status(500).send({ message: "Erro interno do servidor" });
+  }
 };
 
-const remove = (req, res) => {
-  if (!req.context.me || String(req.context.me.id) !== req.params.userId) {
-    return res.status(403).send({ message: "Você só pode remover seu próprio usuário" });
-  }
+const remove = async (req, res) => {
+  try {
+    if (!req.context.me || String(req.context.me.id) !== req.params.userId) {
+      return res.status(403).send({ message: "Você só pode remover seu próprio usuário" });
+    }
 
-  return res.status(204).send();
+    const deletedCount = await userService.deleteUser(req.context.models, req.params.userId);
+
+    if (!deletedCount) {
+      return res.status(404).send({ message: "Usuário não encontrado" });
+    }
+
+    return res.status(204).send();
+  } catch (error) {
+    return res.status(500).send({ message: "Erro interno do servidor" });
+  }
 };
 
 export const userController = {

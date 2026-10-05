@@ -1,23 +1,13 @@
 import { userService } from "../services/index.js";
+import { AppError } from "../utils/index.js";
 
 const getCurrentUser = async (req, res) => {
-  try {
-    if (!req.context.me) {
-      return res.status(401).send({ message: "Usuário não autenticado" });
-    }
+  if (!req.context.me) throw new AppError("Usuário não autenticado", 401);
 
-    const user = await userService.findById(req.context.models, req.context.me.id);
+  const user = await userService.findById(req.context.models, req.context.me.id);
+  if (!user) throw new AppError("Usuário não encontrado", 404);
 
-    if (!user) {
-      return res.status(404).send({ message: "Usuário não encontrado" });
-    }
-
-    return res.status(200).send(user);
-  } catch (error) {
-    return res.status(500).send({ message: "Erro interno do servidor" });
-  }
+  return res.status(200).send(user);
 };
 
-export const sessionController = {
-  getCurrentUser,
-};
+export const sessionController = { getCurrentUser };
